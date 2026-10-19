@@ -209,7 +209,8 @@ module top #(
 
   // --- the 8255's port pins: an edge connector ---------------------------------
   // Off-board drivers, wired-AND with the 8255 (bus_resolve.py --connector);
-  // 1 = released.  The SD loader is the only device plugged in.
+  // 1 = released.  Plugged in: the SD loader, and an idle Kempston joystick
+  // port (port A pulled to 00 while the stock ROM runs).
   wire [7:0] pa_ext, pb_ext, pc_ext;
   wire       nmi_n;
   wire       rom_bank;                // the ROM's second bank (ROM_BANKS)
@@ -242,7 +243,12 @@ module top #(
   always @(posedge clk_x5) if (!nmi_gen_n) nmi_seen <= 1'b1;
   reg [1:0] btn_s = 2'b00;
   always @(posedge clk_x5) btn_s <= {btn_s[0], nmi_btn};
-  assign pa_ext = sd_answer;
+  // Port A is also I/O address 1F, the Kempston joystick's.  Only the menu
+  // (bank 1) reads the bridge's answer there; with the stock ROM paged in,
+  // port A reads 00 -- a Kempston interface with no joystick plugged in --
+  // or a game told it has a Kempston (MANIC.Z80) sees phantom movement
+  // instead of the keys.
+  assign pa_ext = rom_bank ? sd_answer : 8'h00;
   assign pb_ext = 8'hFF;
   assign pc_ext = {7'h7F, sd_ack};            // PC0: ACK
   // PC5 low selects the shadow ROM bank, as a divIDE pages in its EPROM.
@@ -254,7 +260,7 @@ module top #(
   assign rom_bank = ~pc[5];
 `else
   assign rom_bank = 1'b0;
-  assign pa_ext = 8'hFF;
+  assign pa_ext = 8'h00;                      // port 1F: Kempston, no joystick
   assign pb_ext = 8'hFF;
   assign pc_ext = 8'hFF;
   assign nmi_n  = 1'b1;

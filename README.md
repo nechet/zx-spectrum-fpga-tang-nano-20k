@@ -128,9 +128,9 @@ scripts/test.sh full     # the whole board: menu, .z80, .tap, a 720p frame (hour
   slow and the frame rate is 48.3 Hz instead of 50. That is what lets one
   PLL make every clock and keep the picture locked to the board.
 * `.Z80` version 2/3 snapshots and `.SNA` files are not loaded yet.
-* No Kempston joystick yet. A snapshot saved on an emulator with a
-  joystick enabled may ignore the keys: the game reads the missing
-  joystick instead.
+* No joystick can be connected yet. The Kempston port (31, 1Fh) reads
+  as an interface with nothing plugged in, so snapshots saved with a
+  Kempston joystick enabled play from the keyboard.
 
 ## What is where
 

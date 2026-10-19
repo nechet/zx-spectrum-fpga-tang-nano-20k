@@ -989,6 +989,35 @@ from 170 to 92 ns, cleaned those paths, and games load again. What still
 reports failing is the Z80's own logic and its ROM reads, which only
 matter on its clock enable, at least 8 clocks apart (habit 13).
 
+### 7.24 Phantom joystick: one port, two jobs
+
+Manic Miner from the `.tap` answered the arrow keys; the same game from
+`MANIC.Z80` ignored them. The difference was one byte in the snapshot's
+header: "joystick: Kempston". The game then reads I/O port 1F (31) for the
+joystick and, when that byte says "moving", ignores the keyboard.
+
+On a real Spectrum a Kempston interface is a 74LS365-style buffer that
+puts the five switches on the data bus when the CPU reads port 1F; with
+nothing plugged in, its inputs are pulled down and it reads 00. On the
+Krasnodar-48, port 1F is the 8255's port A (the 8255 is selected by A7
+low, its ports by A5/A6: 1F, 3F, 5F, 7F), brought out on the expansion
+connector X3 -- pins A29-A32 and B28-B31 -- presumably for exactly such a
+joystick. Our SD loader plugged into that connector and used port A
+for the menu's answers, so a game saw whatever the bridge last said, as
+if someone were holding the stick.
+
+The fix is a second device on the same connector, sharing it in time:
+while bank 1 (the menu) is paged in, port A carries the bridge's answer;
+while the stock ROM runs, the connector pulls port A to 00, an idle
+joystick. The bank switch already marks which of the two is in charge
+(PC5), like a /OE line choosing which of two buffers drives a bus.
+`tb_sdmenu.sh` checks the port reads 00 once the game is running.
+
+The TTL lesson: an I/O address is a contract with software you did not
+write. Before reusing a port for your own protocol, check what programs
+already expect to find there -- and make it return that whenever your
+protocol is not running.
+
 ---------------------------------------------------------------------------
 
 ## 8. Habits worth copying
@@ -1064,6 +1093,7 @@ matter on its clock enable, at least 8 clocks apart (habit 13).
 | clk_sys | our 135 MHz master clock; everything is sampled on it |
 | synchronous | all state changes on one clock's edges |
 | edge detect | `prev <= x; if (prev && !x) ...` -- sees a falling edge as data |
+| Kempston | the common Spectrum joystick interface: port 1F, bits 0-4 = right, left, down, up, fire, 1 = pressed |
 | data island | HDMI packets (audio, InfoFrames) sent in the blanking, between the syncs |
 | TERC4 | the 4-bit-to-10-bit code used inside data islands |
 | race | result depends on which of two simultaneous signals arrives first |

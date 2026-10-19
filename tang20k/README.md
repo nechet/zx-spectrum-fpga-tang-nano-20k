@@ -128,6 +128,9 @@ to the header, which is why they are the default.
   ROM's main loop. LD-BYTES (0556) is trapped and served from the card, so
   every block, including a game's own later loads, arrives instantly
 * `.SNA`: listed, not loaded yet
+* port A is also port 1F, the Kempston joystick's: it carries the
+  bridge's answers only while bank 1 is paged in, and reads 00 (no
+  joystick) while a program runs (LEARNING.md 7.24)
 
 ## Tests
 

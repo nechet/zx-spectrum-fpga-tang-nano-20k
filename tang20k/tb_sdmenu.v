@@ -388,6 +388,10 @@ module tb_sdmenu;
       if (bad == 0) $display("PASS  all 48K loaded as the image");
       else begin $display("FAIL  %0d bytes differ", bad); fails = fails + 1; end
     end
+    // the game runs on the stock ROM: port 1F (8255 port A) must read as an
+    // idle Kempston joystick, 00
+    if (dut.rom_bank === 1'b0 && dut.pa === 8'h00) $display("PASS  port 1F (Kempston) reads 00 in the game");
+    else begin $display("FAIL  port 1F reads %h, bank %b", dut.pa, dut.rom_bank); fails = fails + 1; end
 `endif
     if (fails == 0) $display("ALL PASSED"); else $display("%0d FAILED", fails);
     $finish;
