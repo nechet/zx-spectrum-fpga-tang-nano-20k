@@ -1,0 +1,11 @@
+// PS/2 keyboard pins, option PS2_PINS=25_26 (see build.tcl).
+// RP2040 USB->PS/2 adapter with a 3.3 V interface.  Receive only.
+// Pins 25/26 are header J6 holes 11 and 10, and are SHARED with the HDMI
+// connector: pin 25 also goes to HPD through 2.2k, pin 26 to CEC through
+// 100R.  CLK goes on 25: the monitor only holds HPD high, which the adapter
+// overrides.  DATA goes on 26: a CEC message from the monitor during a
+// keystroke can corrupt that byte; parity rejects it, so a key may be missed.
+IO_LOC  "ps2_clk" 25;
+IO_PORT "ps2_clk" IO_TYPE=LVCMOS33 PULL_MODE=UP BANK_VCCIO=3.3;
+IO_LOC  "ps2_data" 26;
+IO_PORT "ps2_data" IO_TYPE=LVCMOS33 PULL_MODE=UP BANK_VCCIO=3.3;

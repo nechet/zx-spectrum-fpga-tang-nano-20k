@@ -1,0 +1,8 @@
+// PS/2 keyboard pins, option PS2_PINS=73_74 (the default; see build.tcl).
+// RP2040 USB->PS/2 adapter with a 3.3 V interface.  Receive only; pull-ups
+// keep the lines idle-high if nothing is connected.
+// Pins 73/74 are header J6 holes 1 and 2 and go nowhere else on the board.
+IO_LOC  "ps2_clk" 73;
+IO_PORT "ps2_clk" IO_TYPE=LVCMOS33 PULL_MODE=UP BANK_VCCIO=3.3;
+IO_LOC  "ps2_data" 74;
+IO_PORT "ps2_data" IO_TYPE=LVCMOS33 PULL_MODE=UP BANK_VCCIO=3.3;

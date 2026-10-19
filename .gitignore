@@ -1,0 +1,26 @@
+# The ZX Spectrum ROM is copyright Amstrad and is never committed:
+# scripts/get_rom.sh fetches it.  Every Krasnodar bitstream carries it too.
+*.rom
+spectrum48.hex
+spectrum48_sd.hex
+spectrum48_sdp.hex
+krasnodar_20k*.fs
+
+# Games are not part of this repository; bring your own (legally obtained)
+*.tap
+*.TAP
+*.z80
+*.Z80
+*.sna
+*.SNA
+tb_game_image.hex
+
+# Build and simulation output
+impl/
+build.log
+combined.cst
+*.vcd
+*.ppm
+__pycache__/
+sim[a-z0-9]*
+!sim_720p.v

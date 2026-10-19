@@ -1,0 +1,8 @@
+# Gowin bitstreams use the .fs extension, which GitHub would otherwise
+# count as F# source.  They are binary configuration files, not code.
+*.fs binary linguist-generated -linguist-detectable
+# $readmemh images and test data
+*.hex linguist-generated
+*.uf2 binary
+# generated from the schematic (core/Makefile)
+core/gen/** linguist-generated

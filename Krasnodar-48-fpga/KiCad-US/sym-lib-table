@@ -1,0 +1,4 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "Krasnodar-48-US")(type "KiCad")(uri "${KIPRJMOD}/Krasnodar-48-US.kicad_sym")(options "")(descr "Converted from EasyEDA"))
+)

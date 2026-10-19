@@ -1,0 +1,6 @@
+sim
+*.vcd
+__pycache__/
+rom/*.hex
+rom/*.rom
+rom/*.bin

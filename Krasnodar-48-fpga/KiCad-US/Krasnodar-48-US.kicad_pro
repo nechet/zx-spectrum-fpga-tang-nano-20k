@@ -1,0 +1,22 @@
+{
+  "board": {},
+  "boards": [],
+  "libraries": {
+    "pinned_footprint_libs": [],
+    "pinned_symbol_libs": []
+  },
+  "meta": {
+    "filename": "Krasnodar-48-US.kicad_pro",
+    "version": 1
+  },
+  "net_settings": {},
+  "pcbnew": {},
+  "schematic": {},
+  "sheets": [
+    [
+      "f7bf3a0d-48f7-57ec-81df-8f45eec3f9b9",
+      "Root"
+    ]
+  ],
+  "text_variables": {}
+}

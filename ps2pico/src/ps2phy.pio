@@ -1,0 +1,129 @@
+;
+; Copyright (c) 2025 No0ne (https://github.com/No0ne)
+;
+; SPDX-License-Identifier: MIT
+;
+
+.program ps2write
+
+restart:
+  set    pins, 0                    // clock high
+  irq    clear 0                    // clear busy flag
+  pull   ifempty block              // move new byte into OSR
+  irq    nowait 0                   // set busy flag
+  set    x, 10                      // number of bits to write out
+
+loop:
+  set    pins, 0                    // clock high
+  jmp    pin, write                 // if clock is high, host is still receiving data
+  out    null, 32                   // clock was low, clear OSR
+  irq    wait 1                     // host wants to send data, notify of failure to send data
+  jmp    restart                    // and wait for restart
+
+write:
+  out    pins, 1                    // write out data
+  set    pins, 1                    // set clock low
+  nop                               // cycle delay
+  jmp    x--, loop                  // iterate
+
+
+.program ps2read
+
+restart:
+  set    pins, 0                    // set clock and data high
+  wait   1 gpio, 10  // CLOCKIN=10  // wait for clock to be pulled high
+  wait   0 irq, 0                   // wait for busy flag to get cleared
+  jmp    pin, restart               // restart if not receiving
+  set    pins, 1                    // clock low
+  set    x, 8                       // set loop counter
+
+loop:
+  set    pins, 0                    // clock high
+  in     pins, 1                    // read a bit into ISR
+  set    pins, 1                    // clock low
+  jmp    x--, loop                  // iterate
+  set    pins, 0                    // clock high
+  nop                               // cycle delay
+  set    pins, 1                    // data high, clock low
+  set    pins, 3                    // data low, clock low
+  nop                               // cycle delay
+  set    pins, 2                    // data low, clock high
+  nop                               // cycle delay
+
+% c-sdk {
+
+  void ps2write_program_init(PIO pio, uint sm, uint offset) {
+    pio_sm_config c = ps2write_program_get_default_config(offset);
+
+    pio_gpio_init(pio, CLOCKOUT);
+    pio_gpio_init(pio, DATAOUT);
+
+    // Upstream's rate.  Slowing this to ~12 kHz was tried and made things
+    // worse -- makes stopped arriving intact too -- so the clock is not the
+    // problem.
+    sm_config_set_clkdiv(&c, 1250);
+    sm_config_set_jmp_pin(&c, CLOCKIN);
+    sm_config_set_set_pins(&c, CLOCKOUT, 1);
+    sm_config_set_out_pins(&c, DATAOUT, 1);
+    sm_config_set_out_shift(&c, true, false, 11);
+
+    pio_sm_set_consecutive_pindirs(pio, sm, CLOCKOUT, 2, true);
+    pio_sm_init(pio, sm, offset, &c);
+    pio_sm_set_enabled(pio, sm, true);
+  }
+
+  void ps2read_program_init(PIO pio, uint sm, uint offset) {
+    pio_sm_config c = ps2read_program_get_default_config(offset);
+
+    sm_config_set_clkdiv(&c, 1875);
+    sm_config_set_jmp_pin(&c, DATAIN);
+    sm_config_set_set_pins(&c, CLOCKOUT, 2);
+    sm_config_set_in_pins(&c, DATAIN);
+    sm_config_set_in_shift(&c, true, true, 9);
+
+    pio_sm_init(pio, sm, offset, &c);
+    pio_sm_set_enabled(pio, sm, true);
+  }
+
+%}
+
+
+; Mirror CLOCKOUT and DATAOUT onto a second pair of pins, inverted.
+;
+; The original outputs are active high into a transistor base, so on the PS/2
+; line they appear inverted.  That is fine with the transistors fitted, but a
+; 3.3 V host wired directly needs the true line polarity.  Rather than change
+; the PS/2 programs -- and lose the transistor option -- this just publishes an
+; inverted copy on two more pins, so both styles are available at once.
+;
+; MOV reads the whole input pin group and inverts it in one instruction, so the
+; copy lags the original by three PIO cycles: nanoseconds against a PS/2 bit
+; period of some 60 microseconds.
+.program ps2mirror
+
+loop:
+  mov    osr, ~pins                 // all input pins, inverted
+  out    pins, 2                    // the low two: CLOCKOUT, DATAOUT
+  jmp    loop
+
+% c-sdk {
+
+  // NB: this must be given PIO1.  PIO0 holds ps2write and ps2read, which
+  // together take 31 of its 32 instruction slots -- nothing else fits there.
+  void ps2mirror_program_init(PIO pio, uint sm, uint offset) {
+    pio_sm_config c = ps2mirror_program_get_default_config(offset);
+
+    pio_gpio_init(pio, INVCLOCK);
+    pio_gpio_init(pio, INVDATA);
+
+    // read from CLOCKOUT upward, so bit 0 is the clock and bit 1 the data
+    sm_config_set_in_pins(&c, CLOCKOUT);
+    sm_config_set_out_pins(&c, INVCLOCK, 2);
+    sm_config_set_out_shift(&c, true, false, 32);
+
+    pio_sm_set_consecutive_pindirs(pio, sm, INVCLOCK, 2, true);
+    pio_sm_init(pio, sm, offset, &c);
+    pio_sm_set_enabled(pio, sm, true);
+  }
+
+%}

@@ -1,0 +1,13 @@
+// Krasnodar-48 smoke-test ROM, one hex byte per line ($readmemh format).
+//   0000  31 FF 7F    LD   SP,$7FFF
+//   0003  3E AA       LD   A,$AA
+//   0005  D3 FE       OUT  ($FE),A      ; border / speaker port
+//   0007  32 00 40    LD   ($4000),A    ; first byte of video RAM
+//   000A  3A 00 40    LD   A,($4000)
+//   000D  18 FE       JR   $            ; spin
+31 FF 7F
+3E AA
+D3 FE
+32 00 40
+3A 00 40
+18 FE
